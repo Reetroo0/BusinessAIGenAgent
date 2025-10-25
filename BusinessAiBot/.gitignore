@@ -1,0 +1,8 @@
+**/__pycache__/
+*.pyc
+venv/
+.vscode/
+.env
+/documents/*
+!/documents/
+TEST.py

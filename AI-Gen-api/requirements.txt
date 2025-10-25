@@ -1,0 +1,36 @@
+# API фреймворк и ASGI сервер
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# LangChain и интеграции с LLM
+langgraph>=0.6.7
+langchain>=0.3.27
+langchain-gigachat>=0.3.12
+langchain-community>=0.0.20
+
+# Валидация данных и конфигурация
+pydantic>=2.5.0
+python-dotenv>=1.1.0
+
+# HTTP клиенты и асинхронность
+aiohttp>=3.9.1
+httpx>=0.25.2
+requests>=2.31.0
+
+# Обработка данных и утилиты
+python-json-logger>=2.0.7  # Форматированное JSON логирование
+tenacity>=8.2.3           # Retry механизмы
+cachetools>=5.3.2         # Кэширование
+
+# Типизация
+typing-extensions>=4.8.0
+
+# Dev зависимости
+pytest>=7.4.3             # Тестирование
+pytest-asyncio>=0.21.1    # Асинхронные тесты
+pytest-cov>=4.1.0         # Измерение покрытия кода
+black>=23.11.0            # Форматирование кода
+isort>=5.12.0            # Сортировка импортов
+mypy>=1.7.0              # Статический анализ типов
+flake8>=6.1.0            # Линтер
