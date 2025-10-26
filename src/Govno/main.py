@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_gigachat.chat_models import GigaChat
 from langchain.schema.messages import HumanMessage
-from .tools import analyze_user_profile, find_matching_vacancies, create_learning_plan, provide_career_advice
+from tools import analyze_user_profile, find_matching_vacancies, create_learning_plan, provide_career_advice
 from typing import Dict, Optional, List
 import json
 
@@ -165,7 +165,7 @@ def initialize_user_session(user_id: str, initial_data: Optional[Dict] = None) -
     }
     return session_data
 
-
+# Обрабатывает карьерный запрос пользователя и возвращает структурированный ответ
 def process_career_query(user_id: str, query: str, session_data: Optional[Dict] = None,
                          headers: Optional[Dict] = None) -> Dict:
     """Обрабатывает карьерный запрос пользователя и возвращает структурированный ответ"""

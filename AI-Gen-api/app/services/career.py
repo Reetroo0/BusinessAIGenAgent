@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from ...main import run_agent
+from Govno.main import run_agent
 from ..tools.career_tools import analyze_user_profile, find_matching_vacancies, create_learning_plan, provide_career_advice
 
 

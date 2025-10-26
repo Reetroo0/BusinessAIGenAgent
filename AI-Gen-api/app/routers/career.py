@@ -32,6 +32,23 @@ async def analyze_profile(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Алиас для совместимости с клиентами, которые вызывают `/career/analyze`
+@router.post("/analyze", response_model=ProfileAnalysisResponse)
+async def analyze_profile_alias(
+    request: Request,
+    data: ProfileAnalysisRequest,
+    service: CareerService = Depends(get_career_service)
+):
+    """Алиас к analyze_profile — оставлен для обратной совместимости с клиентами."""
+    try:
+        result = await service.analyze_profile(request, data.dict())
+        return ProfileAnalysisResponse(analysis=result)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Ищет подходящие вакансии на основе навыков и опыта
 @router.post("/find-vacancies", response_model=VacancySearchResponse)
 async def find_vacancies(
