@@ -7,7 +7,22 @@ import uvicorn
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-app = FastAPI()
+
+# Планировщик для периодического запуска функции
+scheduler = AsyncIOScheduler()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    scheduler.add_job(set_gigachat_access_token, 'interval', minutes=20)
+    set_gigachat_access_token()
+    try:
+        yield
+    finally:
+        scheduler.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Словарь для хранения сессий пользователей (в памяти)
 sessions = {}  # Ключ: tg_id, Значение: сессия
@@ -49,18 +64,7 @@ async def handle_career_query(query: UserQuery):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка обработки запроса: {str(e)}")
 
-# Планировщик для периодического запуска функции
-scheduler = AsyncIOScheduler()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    scheduler.start()
-    scheduler.add_job(set_gigachat_access_token, 'interval', minutes=20)
-    set_gigachat_access_token()
-    try:
-        yield
-    finally:
-        scheduler.shutdown()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
