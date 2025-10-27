@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
 from langchain.tools.base import tool
-from langchain.callbacks.manager import CallbackManagerForToolRun
+#from langchain.callbacks.manager import CallbackManagerForToolRun
 
 import json
 import re
@@ -38,12 +38,11 @@ class Course(BaseModel):
     level: str
     url: str
 
-
 # Загрузка данных о вакансиях и курсах
 def load_vacancies_data(path: str | Path = None) -> Dict:
     """Загрузка данных о вакансиях из JSON файла"""
     if path is None:
-        path = Path(__file__).parent / 'processed_vacancies.json'
+        path = Path(__file__).parent / 'jsons' / 'processed_vacancies.json'
     else:
         path = Path(path)
     try:
@@ -56,7 +55,7 @@ def load_vacancies_data(path: str | Path = None) -> Dict:
 def load_courses_data(path: str | Path = None) -> Dict:
     """Загрузка данных о курсах из JSON файла"""
     if path is None:
-        path = Path(__file__).parent / 'courses_data.json'
+        path = Path(__file__).parent / 'jsons' / 'courses_data.json'
     else:
         path = Path(path)
     try:
@@ -64,7 +63,6 @@ def load_courses_data(path: str | Path = None) -> Dict:
             return json.load(f)
     except FileNotFoundError:
         return {"courses": []}
-
 
 # Синонимы навыков для нормализации
 SKILLS_SYNONYMS = {
@@ -330,10 +328,12 @@ def find_matching_vacancies(user_skills: str, experience_level: str = "beginner"
     # Извлекаем навыки из входной строки
     skills_list = extract_skills_from_text(user_skills)
     vacancies_data = load_vacancies_data()
-
-    if not vacancies_data.get("vacancies"):
-        return "К сожалению, база вакансий временно недоступна. Попробуйте позже."
-
+    
+    # if not vacancies_data.get("vacancies"):
+    #     print("Я тута")
+    #     return "К сожалению, база вакансий временно недоступна. Попробуйте позже."
+    
+    # print("Я тута")
     matching_vacancies = []
 
     for vacancy in vacancies_data["vacancies"]:

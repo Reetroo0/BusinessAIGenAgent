@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-requests
-selenium
-beautifulsoup4
-pydantic

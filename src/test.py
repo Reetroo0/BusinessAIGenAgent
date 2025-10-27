@@ -8,5 +8,5 @@ session = initialize_user_session("user1", {
 })
 
 # Обработка запроса
-result = process_career_query("user1", "Я знаю Python и SQL, хочу работать в аналитике", session)
+result = process_career_query("user1", "Я знаю Python и SQL, хочу работать в аналитике, подбери мне вакансии для работы, подбери мне конкретные предложения вакансий", session)
 print(result["response"])

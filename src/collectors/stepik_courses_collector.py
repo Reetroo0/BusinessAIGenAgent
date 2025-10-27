@@ -3,6 +3,7 @@ import json
 import time
 from typing import Dict, List, Optional
 import re
+import os
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -515,10 +516,12 @@ class StepikCourseCollector:
         return unique_courses
 
     def save_to_json(self, data: List[Dict], filename: str = "stepik_courses.json"):
-        """Сохраняет данные в JSON файл"""
-        with open(filename, 'w', encoding='utf-8') as f:
+        """Сохраняет данные в JSON файл в каталог jsons/"""
+        os.makedirs("jsons", exist_ok=True)  # Создаёт каталог jsons, если он не существует
+        filepath = os.path.join("jsons", filename)  # Формирует путь jsons/filename
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"💾 Данные сохранены в {filename}")
+        print(f"💾 Данные сохранены в {filepath}")
 
     def run_collection(self):
         """Основной метод для запуска сбора данных"""

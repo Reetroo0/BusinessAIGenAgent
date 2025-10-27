@@ -1,33 +1,28 @@
 import aiohttp
 
-API_URL = "http://0.0.0.0:8000/digitalMaturity"
-ASK_QUESTION_URL = "http://0.0.0.0:8000/askQuestion"
+CAREER_QUERY_URL = "http://0.0.0.0:8000/career_query"
 
-async def fetch_digital_maturity(data: dict) -> dict:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(API_URL, json=data) as resp:
-            if resp.status == 200:
-                return await resp.json()
-            else:
-                return {"result": f"Ошибка при запросе API: {resp.status}"}
+async def send_career_query(tg_id: str, user_data: dict, prompt: str) -> dict:
+    """
+    Отправляет запрос к эндпоинту /career_query FastAPI-сервера.
+    
+    :param tg_id: ID пользователя Telegram
+    :param user_data: словарь с данными пользователя (например: {"name": "Иван", "age": 25, "education": "Бакалавр"})
+    :param prompt: текст запроса к нейросети
+    :return: словарь с ответом от API
+    """
+    payload = {
+        "tg_id": tg_id,
+        "user_data": user_data,
+        "prompt": prompt
+    }
 
-async def ask_question(question: str) -> str:
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(ASK_QUESTION_URL, json={"question": question}) as resp:
+            async with session.post(CAREER_QUERY_URL, json=payload) as resp:
                 if resp.status == 200:
-                    response_data = await resp.json()
-                    return response_data.get("result", "Не удалось получить ответ от сервера.")
+                    return await resp.json()
                 else:
-                    return f"Ошибка при запросе API: {resp.status}"
+                    return {"error": f"Ошибка при запросе API: {resp.status}"}
         except Exception as e:
-            return f"Ошибка при выполнении запроса: {str(e)}"
-
-async def send_result_to_user(message, answers: dict):
-    try:
-        response = await fetch_digital_maturity(answers)
-        result_text = response.get("result", "Не удалось получить результат.")
-        # Отправляем пользователю в Markdown
-        await message.answer(result_text, parse_mode="Markdown")
-    except Exception as e:
-        await message.answer(f"Ошибка: {str(e)}")
+            return {"error": f"Ошибка при выполнении запроса: {str(e)}"}

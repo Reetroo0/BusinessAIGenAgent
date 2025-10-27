@@ -16,4 +16,4 @@ logging.getLogger('aiogram.event').setLevel(logging.WARNING)
 load_dotenv()
 
 bot = Bot(token=os.getenv('BOT_TOKEN'))
-dp = Dispatcher(storage=MemoryStorage())e
+dp = Dispatcher(storage=MemoryStorage())
