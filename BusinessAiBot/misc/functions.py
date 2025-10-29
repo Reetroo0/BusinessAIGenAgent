@@ -1,6 +1,6 @@
 import aiohttp
 
-CAREER_QUERY_URL = "http://0.0.0.0:8000/career_query"
+CAREER_QUERY_URL = "http://0.0.0.0:8001/career_query"
 
 async def send_career_query(tg_id: str, user_data: dict, prompt: str) -> dict:
     """
