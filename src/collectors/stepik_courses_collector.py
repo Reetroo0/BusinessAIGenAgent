@@ -516,9 +516,14 @@ class StepikCourseCollector:
         return unique_courses
 
     def save_to_json(self, data: List[Dict], filename: str = "stepik_courses.json"):
-        """Сохраняет данные в JSON файл в каталог jsons/"""
-        os.makedirs("jsons", exist_ok=True)  # Создаёт каталог jsons, если он не существует
-        filepath = os.path.join("jsons", filename)  # Формирует путь jsons/filename
+        """Сохраняет данные в JSON файл в каталог jsons/ (относительно корня проекта)"""
+        
+        # Путь к корню проекта (на уровень выше collectors)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        json_dir = os.path.join(base_dir, "jsons")
+        os.makedirs(json_dir, exist_ok=True)
+        
+        filepath = os.path.join(json_dir, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         print(f"💾 Данные сохранены в {filepath}")
@@ -536,7 +541,7 @@ class StepikCourseCollector:
             return []
 
         # Сохраняем результат
-        self.save_to_json(courses, "courses_data.json")
+        self.save_to_json(courses, "stepik_courses.json")
 
         # Показываем примеры с ценами
         print("\n💰 Примеры курсов с ценами:")

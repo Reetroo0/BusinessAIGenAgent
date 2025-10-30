@@ -54,8 +54,9 @@ def load_vacancies_data(path: str | Path = None) -> Dict:
 
 def load_courses_data(path: str | Path = None) -> Dict:
     """Загрузка данных о курсах из JSON файла"""
+    print("Вызвана функция: load_courses_data")
     if path is None:
-        path = Path(__file__).parent / 'jsons' / 'courses_data.json'
+        path = Path(__file__).parent / 'jsons' / 'stepik_courses.json'
     else:
         path = Path(path)
     try:
@@ -115,19 +116,19 @@ def analyze_user_profile(user_input: str) -> str:
     # Формирование ответа
     response = f"""🎯 Отлично! Я проанализировал ваш профиль:
 
-📊 Ваши текущие навыки:
-{format_skills_list(skills)}
+                    📊 Ваши текущие навыки:
+                    {format_skills_list(skills)}
 
-🎓 Уровень образования: {education_level}
-💼 Опыт: {experience}
+                    🎓 Уровень образования: {education_level}
+                    💼 Опыт: {experience}
 
-🎯 Рекомендуемые направления:
-{format_recommendations(recommended_directions)}
+                    🎯 Рекомендуемые направления:
+                    {format_recommendations(recommended_directions)}
 
-Хотите:
-🔍 Посмотреть подходящие вакансии для начинающих
-📚 Получить учебный план для развития  
-💬 Обсудить карьерные возможности"""
+                    Хотите:
+                    🔍 Посмотреть подходящие вакансии для начинающих
+                    📚 Получить учебный план для развития  
+                    💬 Обсудить карьерные возможности"""
 
     return response
 
@@ -411,6 +412,8 @@ def create_learning_plan(target_position: str, current_skills: str) -> str:
 
     current_skills_list = extract_skills_from_text(current_skills)
     courses_data = load_courses_data()
+    print(f"Результат загрузки курсов {courses_data[:1]}")
+    
 
     # Определяем требуемые навыки для целевой позиции
     required_skills_map = {
@@ -440,6 +443,8 @@ def create_learning_plan(target_position: str, current_skills: str) -> str:
 
 def find_courses_for_skill(skill: str, courses_data: Dict) -> List[Dict]:
     """Находит курсы для развития конкретного навыка"""
+    print("Вызвана функция: find_courses_for_skill")
+
     if not courses_data.get("courses"):
         return []
 
@@ -458,14 +463,14 @@ def format_learning_plan_response(target_position: str, missing_skills: List[str
     """Форматирует ответ с учебным планом"""
     response = f"""🎓 Учебный план для подготовки к должности **{target_position}**
 
-📋 Необходимо освоить:
-{format_skills_list(missing_skills)}
+                    📋 Необходимо освоить:
+                    {format_skills_list(missing_skills)}
 
----
+                    ---
 
-📚 Рекомендуемые курсы:
+                    📚 Рекомендуемые курсы:
 
-"""
+                    """
 
     for i, course in enumerate(courses, 1):
         response += f"{i}. **{course.get('title', 'Название курса')}**\n"

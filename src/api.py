@@ -6,8 +6,8 @@ from Token.set_token import set_gigachat_access_token
 import uvicorn
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-
+from dotenv import load_dotenv
+import os
 # Планировщик для периодического запуска функции
 scheduler = AsyncIOScheduler()
 
@@ -51,8 +51,11 @@ async def handle_career_query(query: UserQuery):
         # Получаем сессию
         session = sessions[query.tg_id]
 
+        load_dotenv()
+        token = os.getenv('GIGACHAT_ACCESS_TOKEN')
+        headers = {"Authorization": f"Bearer {token}"}
         # Обрабатываем запрос к нейросети
-        result = process_career_query(query.tg_id, query.prompt, session)
+        result = process_career_query(query.tg_id, query.prompt, session, headers)
 
         # Формируем ответ
         response = QueryResponse(

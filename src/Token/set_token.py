@@ -20,7 +20,7 @@ def set_gigachat_access_token() -> str:
     }
 
     try:
-        response = requests.post(url, headers=headers, data=payload, verify=False)
+        response = requests.post(url, headers=headers, data=payload, verify=certifi.where())
         response.raise_for_status()  # Проверяем успешность запроса
         access_token = response.json()['access_token']
         

@@ -166,7 +166,7 @@ def initialize_user_session(user_id: str, initial_data: Optional[Dict] = None) -
     return session_data
 
 
-def process_career_query(user_id: str, query: str, session_data: Optional[Dict] = None,
+def process_career_query(user_id: str, query: str, session_data: Optional[Dict] = None, 
                          headers: Optional[Dict] = None) -> Dict:
     """Обрабатывает карьерный запрос пользователя и возвращает структурированный ответ"""
 
