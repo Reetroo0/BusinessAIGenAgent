@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_gigachat.chat_models import GigaChat
 from langchain.schema.messages import HumanMessage
-from tools import analyze_user_profile, find_matching_vacancies, create_learning_plan, provide_career_advice
+from tools import find_matching_vacancies, create_learning_plan, provide_career_advice 
 from typing import Dict, Optional, List
 import json
 
@@ -35,9 +35,11 @@ system_prompt = (
     "Будь дружелюбным, поддерживающим и мотивирующим помощником. "
     "Используй эмодзи для создания позитивной атмосферы. "
     "Всегда предлагай следующие шаги и варианты развития."
+    "Если ты уверен, что дал полный ответ пользователю, ответь напрямую и не вызывай инструменты повторно. "
+    "Никогда не вызывай один и тот же инструмент более одного раза в рамках одной задачи."
 )
 
-TOOLS = [analyze_user_profile, find_matching_vacancies, create_learning_plan, provide_career_advice]
+TOOLS = [find_matching_vacancies, create_learning_plan, provide_career_advice]
 
 
 def _init_agent(token: str):
@@ -167,33 +169,39 @@ def initialize_user_session(user_id: str, initial_data: Optional[Dict] = None) -
 
 
 def process_career_query(user_id: str, query: str, session_data: Optional[Dict] = None, 
-                         headers: Optional[Dict] = None) -> Dict:
+                         headers: Optional[Dict] = None, user_data: Optional[Dict] = None) -> Dict:
     """Обрабатывает карьерный запрос пользователя и возвращает структурированный ответ"""
 
+    # Если сессии нет — создаём новую
     if session_data is None:
-        session_data = initialize_user_session(user_id)
+        session_data = initialize_user_session(user_id, user_data or {})
 
-    # Добавляем контекст из истории сессии
+    # Обновляем профиль пользователя в сессии данными из user_data
+    if user_data:
+        session_data.setdefault("profile", {}).update(user_data)
+
+    # Добавляем контекст из профиля в запрос
     enhanced_query = query
     if session_data.get("profile"):
         profile_context = f"Контекст пользователя: {json.dumps(session_data['profile'], ensure_ascii=False)}"
         enhanced_query = f"{query}\n\n{profile_context}"
 
     try:
+        # Передаём расширенный запрос и профиль
         response = run_agent(enhanced_query, session_data.get("profile"), headers)
 
-        # Обновляем историю сессии
-        session_data["conversation_history"].append({
+        # Обновляем историю общения
+        session_data.setdefault("conversation_history", []).append({
             "query": query,
             "response": response,
-            "timestamp": json.dumps({"timestamp": "2024-01-01T00:00:00Z"})  # В реальности использовать datetime
+            "timestamp": json.dumps({"timestamp": "2024-01-01T00:00:00Z"})  # заглушка времени
         })
 
-        # Пытаемся извлечь навыки из ответа для обновления профиля
+        # Обновляем флаг извлечённых навыков
         if "навыки" in response.lower() and not session_data["profile"].get("skills_extracted"):
             session_data["profile"]["skills_extracted"] = True
-
-        return {
+        
+        return {    
             "success": True,
             "response": response,
             "session_data": session_data,

@@ -2,6 +2,7 @@
 uvicorn==0.38.0
 fastapi==0.120.1
 APScheduler==3.11.0
+psycopg2-binary==2.9.10
 
 # LangChain и LangGraph для работы с ИИ-агентом
 langchain>=0.1.0
