@@ -40,17 +40,30 @@ class Course(BaseModel):
 
 
 # Загрузка данных о вакансиях и курсах
-def load_vacancies_data(path: str | Path = None) -> Dict:
-    """Загрузка данных о вакансиях из JSON файла"""
+def load_vacancies_data(path: str | Path = None) -> List[Dict]:
+    """Загрузка данных о вакансиях из JSON файла.
+
+    Возвращает всегда список словарей вакансий. Поддерживает два формата файла:
+    - Список вакансий (корневой элемент — массив)
+    - Словарь {"vacancies": [...]}
+    """
     if path is None:
         path = Path(__file__).parent / 'jsons' / 'processed_vacancies.json'
     else:
         path = Path(path)
     try:
         with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            # Если файл содержит объект с ключом 'vacancies', вернём его
+            if isinstance(data, dict) and 'vacancies' in data:
+                return data.get('vacancies') or []
+            # Если массив — вернём как есть
+            if isinstance(data, list):
+                return data
+            # Неподдерживаемый формат — вернём пустой список
+            return []
     except FileNotFoundError:
-        return {"vacancies": []}
+        return []
 
 
 def load_courses_data(path: str | Path = None) -> Dict:
@@ -218,35 +231,41 @@ def format_skills_list(skills: List[str]) -> str:
 
 # Функция №2: Подбор вакансий по профилю
 @tool
-def find_matching_vacancies() -> str:
+def find_matching_vacancies(user_skills: Optional[List[str]] = None, experience_level: Optional[str] = None) -> str:
     """
     Подбирает подходящие вакансии на основе навыков пользователя и уровня опыта.
 
     Args:
-        user_skills: Строка с навыками пользователя (через запятую или в свободной форме)
+        user_skills: Список навыков пользователя
         experience_level: Уровень опыта (нет опыта, beginner, junior, middle)
 
     Returns:
         str: Отформатированный список подходящих вакансий
     """
-    print("Вызвана функция: find_matching_vacancies")
+    print(f"Вызвана функция: find_matching_vacancies")
+    print(f"DEBUG: Переданные навыки: {user_skills}")
+    print(f"DEBUG: Переданный опыт: {experience_level}")
 
     vacancies_data = load_vacancies_data()
 
-    #user_skills и experience_level должны прийти из данных о пользователе
-    user_skills = ['Git', 'Go', 'React']
-    experience_level = 'Нет опыта'
+    # Если навыки/опыт не переданы — используем заглушки (лучше, если агент передаёт их)
+    if not user_skills:
+        user_skills = ['Git', 'Go', 'React']
+    if not experience_level:
+        experience_level = 'Нет опыта'
 
     matching_vacancies = []
 
     for vacancy in vacancies_data:
         # Проверяем соответствие уровню опыта
-        vacancy_exp = vacancy.get("experience", "").lower()
-        if experience_level == "Нет опыта" and vacancy_exp == "от 3 до 6 лет":
+        # В данных поле опыта может называться по-разному
+        vacancy_exp = (vacancy.get("experience") or vacancy.get("experience_level") or "").lower()
+        if experience_level.lower() in ("нет опыта", "без опыта") and "от 3" in vacancy_exp:
             continue
 
         # Расчет соответствия навыков
-        vacancy_skills = vacancy.get("skills", [])
+        # В разных источниках навыки могут называться по-разному
+        vacancy_skills = vacancy.get("skills") or vacancy.get("required_skills") or []
         match_score = calculate_vacancy_match(user_skills, vacancy_skills)
 
         if match_score > 0.3:  # Пороговое значение
@@ -282,20 +301,44 @@ def calculate_vacancy_match(user_skills: List[str], vacancy_skills: List[str]) -
 
 
 def format_vacancies_response(vacancies: List[Dict]) -> str:
-    """Форматирует ответ с вакансиями"""
-    response = "🔍 Найдены подходящие вакансии:\n\n"
+    """Форматирует ответ с вакансиями. Всегда включает ссылки на вакансии."""
+    response = "🔍 Найдены подходящие вакансии:\n"
+    response += "❗ Обязательно переходите по ссылкам ниже, чтобы увидеть полное описание вакансий\n\n"
 
     for i, vac_data in enumerate(vacancies, 1):
         vacancy = vac_data["vacancy"]
         match_score = vac_data["match_score"]
 
-        response += f"{i}. {vacancy.get('name', 'Название не указано')}\n"
-        response += f"   🏢 {vacancy.get('company', 'Компания не указана')}\n"
-        response += f"   💰 {vacancy.get('salary', 'Зарплата не указана')}\n"
-        response += f"   📄 Требуемые навыки: {', '.join(vacancy.get('skills', ['Навыки не указаны']))}\n"
+        # Гибкие ключи: некоторые JSON используют 'name'/'title', 'skills'/'required_skills', 'url'/'link'
+        title = vacancy.get('name') or vacancy.get('title') or 'Название не указано'
+        company = vacancy.get('company') or vacancy.get('employer') or 'Компания не указана'
+        salary = vacancy.get('salary') or vacancy.get('salary_range') or 'Зарплата не указана'
+        skills_list = vacancy.get('skills') or vacancy.get('required_skills') or ['Навыки не указаны']
+        experience_str = vacancy.get('experience') or vacancy.get('experience_level') or 'Опыт не указан'
+
+        # Попытка найти ссылку: несколько возможных ключей, иначе собрать по source+id
+        url = vacancy.get('url') or vacancy.get('link') or vacancy.get('vacancy_url')
+        if not url:
+            source = (vacancy.get('source') or '').lower()
+            vid = vacancy.get('id') or vacancy.get('vacancy_id')
+            if source and vid:
+                if 'hh.ru' in source or 'hh' in source:
+                    url = f"https://hh.ru/vacancy/{vid}"
+                elif 'superjob' in source:
+                    url = f"https://russia.superjob.ru/vacancy/{vid}"
+                else:
+                    # общий fallback
+                    url = f"{source.rstrip('/')}/vacancy/{vid}" if source else 'Ссылка не найдена'
+
+        response += f"{i}. {title}\n"
+        response += f"   🏢 {company}\n"
+        response += f"   💰 {salary}\n"
+        response += f"   📄 Требуемые навыки: {', '.join(skills_list)}\n"
         response += f"   🎯 Совпадение: {match_score:.0%}\n"
-        response += f"   📍 {vacancy.get('experience', 'Опыт не указан')}\n\n"
-        response += f"   🔗 {vacancy.get('url', 'Ссылка не найдена')}\n\n"
+        response += f"   📍 {experience_str}\n"
+        # Принудительно добавляем ссылку, даже если она не найдена
+        response += f"   🔗 Ссылка на вакансию: {url or 'Не найдена'}\n"
+        response += "   " + "=" * 50 + "\n\n"
 
     response += "Хотите увидеть больше вакансий или получить детали по конкретной позиции?"
     return response
